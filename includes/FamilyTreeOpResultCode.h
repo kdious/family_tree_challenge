@@ -22,7 +22,8 @@ namespace FamilyTree {
         ADD_EDGE_ERROR,
         INPUT_FILE_OPEN_ERROR,
         INPUT_FILE_FORMAT_ERROR,
-        SUCCESS = 0
+        FAMILY_MEMBER_NOT_FOUND,
+		SUCCESS = 0
     } FamilyTreeOpResultCode;
 
 } /* namespace FamilyTree */

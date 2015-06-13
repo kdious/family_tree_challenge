@@ -60,9 +60,8 @@ class FamilyTreeClass {
         // Count the grandchildren for familyMember
         FamilyTreeOpResultCode countGrandChildren(FamilyMemberClass const & familyMember, uint32_t & count);
         
-        // Count the siblings for familyMember
-        FamilyTreeOpResultCode countSiblings(FamilyMemberClass const & familyMember, uint32_t & count);
         
+
         // Find the grandparent for familyMember
         FamilyTreeOpResultCode findGrandParent(FamilyMemberClass const & familyMember, FamilyMemberClass * grandParent);
         
@@ -72,6 +71,9 @@ class FamilyTreeClass {
     public:
         // Initialize the family tree
         FamilyTreeOpResultCode initialize(string inputFileName);
+
+        // Count the siblings for familyMember
+		FamilyTreeOpResultCode countSiblings(string memberName, uint32_t & count);
 };
 
 } /* namespace FamilyTree */

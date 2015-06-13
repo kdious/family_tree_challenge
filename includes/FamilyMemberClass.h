@@ -20,7 +20,7 @@ using namespace OpenGraphtheory;
 class FamilyMemberClass : public Vertex {
     // Constants and enums
     public:
-        // Defauly value for age
+        // Default value for age
         uint8_t INVALID_AGE = UINT8_MAX;
         
         // Gender value
@@ -41,8 +41,17 @@ class FamilyMemberClass : public Vertex {
     // Member variables
     private:
 
-
+    // Constructors/Destructors
     public:
+        // Default constructor
+        FamilyMemberClass();
+
+        // Destructor
+        ~FamilyMemberClass();
+
+    // Class methods
+    public:
+        uint32_t getSiblingCount();
         
 };
 

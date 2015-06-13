@@ -1,0 +1,11 @@
+MEMBERS:Nancy:Carl:Jill:Adam:Joseph:Catherine:Kevin:Aaron:James:George:Samuel:Mary:Patrick:Robert
+CHILDREN:Nancy:Carl:Jill:Adam
+CHILDREN:Carl:Joesph:Catherine
+CHILDREN:Jill:Kevin
+CHILDREN:Kevin:Aaron:James:George:Samuel
+CHILDREN:James:Mary
+CHILDREN:George:Robert:Patrick
+SIBLINGS:Carl:Jill:Adam
+SIBLINGS:Joseph:Catherine
+SIBLINGS:Aaron:James:George:Samuel:Mary
+SIBLINGS:Patrick:Robert

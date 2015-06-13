@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/FamilyTreeClass.cpp \
 ../src/FamilyTreeMain.cpp 
 
 OBJS += \
+./src/FamilyTreeClass.o \
 ./src/FamilyTreeMain.o 
 
 CPP_DEPS += \
+./src/FamilyTreeClass.d \
 ./src/FamilyTreeMain.d 
 
 

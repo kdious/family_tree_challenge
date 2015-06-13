@@ -23,6 +23,19 @@ TEST_F(FamilyTreeTestSuite, invalidInputFileName) {
     
 }
 
+TEST_F(FamilyTreeTestSuite, validInputFile) {
+    FamilyTreeClass testTree;
+
+    string validInputFilePath =
+    		"/home/builduser/git/family_tree_challenge/input_files/sample_family_tree_input_file.txt";
+
+
+    EXPECT_EQ(SUCCESS, testTree.initialize(validInputFilePath));
+}
+
+
+
+
 int main(int argc, char **argv) {
   printf("Running main() from sample1\n");
   testing::InitGoogleTest(&argc, argv);

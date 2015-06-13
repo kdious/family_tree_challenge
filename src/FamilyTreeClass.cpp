@@ -98,7 +98,7 @@ namespace FamilyTree {
   
         if(infile.is_open() == false) {
             // Print error Message
-            cout << "Input file formatted incorrectly" << endl;
+            cout << "Could not open the file: " << fileName << endl;
 
             // Close input file
             infile.close();
@@ -117,7 +117,7 @@ namespace FamilyTree {
             
             // Create the member objects and add them as vertices to the graph
             if(currentLineTokens[0].compare("MEMBERS")) {
-                for(int i = 1; i < currentLineTokens.size(); i++) {
+                for(unsigned int i = 1; i < currentLineTokens.size(); i++) {
                     // Add the vertex to the graph
                     VertexIterator currentVertexIterator = m_Graph.AddVertex();
                     
@@ -158,7 +158,7 @@ namespace FamilyTree {
                 }
                 
                 // For each child, add a parent->child edge to the graph
-                for(int i = 2; i < currentLineTokens.size(); i++) {
+                for(unsigned int i = 2; i < currentLineTokens.size(); i++) {
                     // Find the child vertex
                     string currentChildName = currentLineTokens[i];
                     FamilyMemberClass * pCurrentChild = findFamilyMember(currentChildName);
@@ -205,7 +205,7 @@ namespace FamilyTree {
                 }
                 
                 // For each child, add a sibling->sibling edge to the graph
-                for(int i = 2; i < currentLineTokens.size(); i++) {
+                for(unsigned int i = 2; i < currentLineTokens.size(); i++) {
                     // Find the sibling vertex
                     string currentSiblingName = currentLineTokens[i];
                     FamilyMemberClass * pCurrentSibling = findFamilyMember(currentSiblingName);
@@ -244,8 +244,10 @@ namespace FamilyTree {
                 
                 // Return false
                 return INPUT_FILE_FORMAT_ERROR;
-            }     
+            }
         }
+
+        return SUCCESS;
     }
     
     FamilyMemberClass * FamilyTreeClass::findFamilyMember(string const & memberName) {

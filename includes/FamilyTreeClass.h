@@ -52,8 +52,8 @@ class FamilyTreeClass {
         // Create the relationship between the from and to family members
         FamilyTreeOpResultCode addRelationship
         (
-            FamilyMemberClass const * from, 
-            FamilyMemberClass const * to, 
+            string & from,
+            string & to,
             FamilyMemberClass::relationship_t relationship
         );
         

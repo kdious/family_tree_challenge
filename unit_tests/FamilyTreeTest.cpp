@@ -44,6 +44,9 @@ TEST_F(FamilyTreeTestSuite, siblingCount) {
 
     uint32_t siblingCount = 0;
 
+    // INVALID FAMILY MEMBER
+    EXPECT_EQ(FAMILY_MEMBER_NOT_FOUND, testTree.countSiblings("Invalid_Family_Member_Name", siblingCount));
+
     // NO SIBLINGS
 
     // Nancy

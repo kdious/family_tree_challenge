@@ -33,8 +33,8 @@ class FamilyMemberClass : public Vertex {
         
         // Relationships between family members
         typedef enum {
-            Parent,
-            Child,
+            Parent_Child,
+            Child_Parent,
             Sibling
         } relationship_t;
     

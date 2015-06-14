@@ -23,7 +23,16 @@ using namespace OpenGraphtheory;
 namespace FamilyTree {
 
 class FamilyTreeClass {
-    // Member variables
+    // Constants and enums
+	public:
+		// Relationships between family members
+		typedef enum {
+			Parent_Child,
+			Child_Parent,
+			Sibling
+		} relationship_t;
+
+	// Member variables
     private:
         // Graph that will represent the family tree
         Graph m_Graph;
@@ -54,19 +63,24 @@ class FamilyTreeClass {
         (
             string & from,
             string & to,
-            FamilyMemberClass::relationship_t relationship
+            relationship_t relationship
         );
         
-        // Count the grandchildren for familyMember
+        // Count the grandchildren for family member
         FamilyTreeOpResultCode countGrandChildren(FamilyMemberClass const & familyMember, uint32_t & count);
         
-        
-
-        // Find the grandparent for familyMember
-        FamilyTreeOpResultCode findGrandParent(FamilyMemberClass const & familyMember, FamilyMemberClass * grandParent);
+        // Find the grandparent for family member
+        //FamilyTreeOpResultCode getGrandparent(string & memberName, FamilyMemberClass * grandParent);
         
         // Find Family Member
         FamilyMemberClass * findFamilyMember(string const & name);
+
+
+        FamilyTreeOpResultCode getGrandparentsList
+		(
+			string & memberName,
+			vector<FamilyMemberClass *> & grandParentList
+		);
                 
     public:
         // Initialize the family tree
@@ -74,6 +88,9 @@ class FamilyTreeClass {
 
         // Count the siblings for familyMember
 		FamilyTreeOpResultCode countSiblings(string memberName, uint32_t & count);
+
+		// Count the siblings for familyMember
+		FamilyTreeOpResultCode getGrandparentNameList(string memberName, vector<string> & grandparentList);
 };
 
 } /* namespace FamilyTree */

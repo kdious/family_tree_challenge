@@ -6,6 +6,8 @@
  */
 
 #include "FamilyMemberClass.h"
+#include "FamilyTreeClass.h"
+
 
 namespace FamilyTree {
 	// Default constructor
@@ -28,7 +30,7 @@ namespace FamilyTree {
 		for (unsigned int i = 0; i < adjacentEdges.size(); i++) {
 			Edge * const currentEdge = adjacentEdges[i];
 			IntAttribute * pRelationshipAttr = (IntAttribute *)currentEdge->GetAttribute("Relationship");
-			if(pRelationshipAttr->Value == Sibling) {
+			if(pRelationshipAttr->Value == FamilyTreeClass::Sibling) {
 				siblingCount++;
 			}
 		}

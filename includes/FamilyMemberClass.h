@@ -30,13 +30,6 @@ class FamilyMemberClass : public Vertex {
             Other,
             Invalid
         } gender_t;
-        
-        // Relationships between family members
-        typedef enum {
-            Parent_Child,
-            Child_Parent,
-            Sibling
-        } relationship_t;
     
     // Member variables
     private:

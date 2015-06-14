@@ -113,6 +113,101 @@ TEST_F(FamilyTreeTestSuite, siblingCount) {
 	EXPECT_EQ(3, siblingCount);
 }
 
+TEST_F(FamilyTreeTestSuite, grandparentList) {
+    FamilyTreeClass testTree;
+
+    string validInputFilePath =
+    		"/home/builduser/git/family_tree_challenge/input_files/sample_family_tree_input_file.txt";
+
+    // Initialize the tree
+    testTree.initialize(validInputFilePath);
+
+    vector<string> grandparentNameList;
+
+    // INVALID FAMILY MEMBER
+	EXPECT_EQ(FAMILY_MEMBER_NOT_FOUND, testTree.getGrandparentNameList("Invalid_Family_Member_Name", grandparentNameList));
+
+    // NO GRANDPARENTS
+
+    // Nancy
+    EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Nancy", grandparentNameList));
+    EXPECT_EQ(0, grandparentNameList.size());
+
+    // Jill
+    EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Jill", grandparentNameList));
+    EXPECT_EQ(0, grandparentNameList.size());
+
+    // Carl
+    EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Carl", grandparentNameList));
+    EXPECT_EQ(0, grandparentNameList.size());
+
+    // Adam
+    EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Adam", grandparentNameList));
+    EXPECT_EQ(0, grandparentNameList.size());
+
+    // ONE GRANDPARENT
+
+    // A. Grandparent: Nancy
+
+    // Nancy
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Catherine", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Nancy", grandparentNameList[0]);
+
+	// Joseph
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Joseph", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Nancy", grandparentNameList[0]);
+
+	// Kevin
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Kevin", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Nancy", grandparentNameList[0]);
+
+	// B. Grandparent: Jill
+	// Aaron
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Aaron", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Jill", grandparentNameList[0]);
+
+	// James
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("James", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Jill", grandparentNameList[0]);
+
+	// George
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("George", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Jill", grandparentNameList[0]);
+
+	// Samuel
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Samuel", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Jill", grandparentNameList[0]);
+
+	// C. Grandparent: Kevin
+
+	// Mary
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Mary", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Kevin", grandparentNameList[0]);
+
+	// Mary
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Mary", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Kevin", grandparentNameList[0]);
+
+	// Robert
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Robert", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Kevin", grandparentNameList[0]);
+
+	// Patrick
+	EXPECT_EQ(SUCCESS, testTree.getGrandparentNameList("Patrick", grandparentNameList));
+	EXPECT_EQ(1, grandparentNameList.size());
+	EXPECT_EQ("Kevin", grandparentNameList[0]);
+}
+
 
 int main(int argc, char **argv) {
   printf("Running main() from sample1\n");

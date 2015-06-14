@@ -30,20 +30,6 @@ namespace FamilyTree {
     FamilyTreeClass::~FamilyTreeClass() {
     }
 
-    FamilyMemberClass * FamilyTreeClass::findFamilyMember(string const & memberName) {
-
-        FamilyMemberClass * pFamilyMember = NULL;
-
-        for(VertexIterator v = m_Graph.BeginVertices(); v != m_Graph.EndVertices(); v++) {
-            if((*v)->GetLabel("Member_Name").compare(memberName) == 0) {
-                pFamilyMember = (FamilyMemberClass *)(*v);
-                break;
-            }
-        }
-
-        return pFamilyMember;
-    }
-
     FamilyTreeOpResultCode FamilyTreeClass::initialize(string inputFileName) {
         return constructTreeFromFile(inputFileName);
     }
@@ -69,12 +55,110 @@ namespace FamilyTree {
         return SUCCESS;
     }
 
+    FamilyMemberClass * FamilyTreeClass::findFamilyMember(string const & memberName) {
+
+        FamilyMemberClass * pFamilyMember = NULL;
+
+        for(VertexIterator v = m_Graph.BeginVertices(); v != m_Graph.EndVertices(); v++) {
+            if((*v)->GetLabel("Member_Name").compare(memberName) == 0) {
+                pFamilyMember = (FamilyMemberClass *)(*v);
+                break;
+            }
+        }
+
+        return pFamilyMember;
+    }
+
+    // Find the grandparent for family member
+    FamilyTreeOpResultCode FamilyTreeClass::getGrandparentsList
+	(
+		string & memberName,
+		vector<FamilyMemberClass *> & grandParentList
+    ) {
+    	// Retrieve the FamilyMemberClass objects for
+		// the specified family member.  Return error
+		// if one of them is not present in the tree.
+    	FamilyMemberClass * pFamilyMember = findFamilyMember(memberName);
+    	if(pFamilyMember == NULL) {
+			cout << memberName << " is not in the family tree" << endl;
+			return FAMILY_MEMBER_NOT_FOUND;
+		}
+
+    	// Clear the vector
+    	grandParentList.clear();
+
+    	// Retrieve the set of from edges connected to this vertex
+		// where "from" edge means the edge is directed from the vertex
+		EdgeSet childAdjacentEdges = pFamilyMember->CollectIncidentEdges(false, true, false);
+
+		// Find the parent of each parent of pFamilyMember.  Store
+		// pointers to each of these FamilyMemberClass objects in
+		// grandParentList.  These are the pointers to each grandparent
+		// of pFamilyMember
+		for (unsigned int i = 0; i < childAdjacentEdges.size(); i++) {
+			Edge * const childParentEdge = childAdjacentEdges[i];
+			IntAttribute * pRelationshipAttr = (IntAttribute *)childParentEdge->GetAttribute("Relationship");
+
+			// If this has a child->parent relationship
+			// then the "to" vertex is the parent of pFamilyMember
+			if(pRelationshipAttr->Value == Child_Parent) {
+				FamilyMemberClass * pParent = (FamilyMemberClass *)childParentEdge->To();
+
+				// Retrieve the set of from edges connected to this vertex
+				// where "from" edge means the edge is directed from the vertex
+				EdgeSet childAdjacentEdges = pParent->CollectIncidentEdges(false, true, false);
+
+				// Find the grandparent of pFamilyMember
+				// (the parent of pParent)
+				for (unsigned int j = 0; j < childAdjacentEdges.size(); j++) {
+					Edge * const parentGrandparentEdge = childAdjacentEdges[j];
+					IntAttribute * pRelationshipAttr = (IntAttribute *)parentGrandparentEdge->GetAttribute("Relationship");
+
+					// If this is a child->parent edge,t
+					// get the parent vertex.  This is the
+					// grandparent of memberName
+					if(pRelationshipAttr->Value == Child_Parent) {
+						grandParentList.push_back((FamilyMemberClass *)parentGrandparentEdge->To());
+					}
+				}
+			}
+		}
+
+    	return SUCCESS;
+
+    }
+
+    FamilyTreeOpResultCode FamilyTreeClass::getGrandparentNameList
+	(
+		string memberName,
+		vector<string> & grandparentStringList
+	) {
+    	vector<FamilyMemberClass *> grandParentList;
+    	FamilyTreeOpResultCode result = getGrandparentsList(memberName, grandParentList);
+
+    	if(result != SUCCESS) {
+    		cout << "Failed to retrieve grandparent list" << endl;
+    		return result;
+    	}
+
+    	// Clear the input list
+    	grandparentStringList.clear();
+
+    	// Create the list of grandparent strings
+    	for(vector<FamilyMemberClass *>::iterator it = grandParentList.begin() ; it != grandParentList.end(); ++it) {
+    		StringAttribute * nameAttribute = (StringAttribute *)((*it)->GetAttribute("Member_Name"));
+    		grandparentStringList.push_back(nameAttribute->Value);
+    	}
+
+    	return SUCCESS;
+    }
+
     // Add a relationship to the Family Tree
     FamilyTreeOpResultCode FamilyTreeClass::addRelationship
     (
         string & from,
         string & to,
-        FamilyMemberClass::relationship_t relationship
+        relationship_t relationship
     ) {
     	// Retrieve the FamilyMemberClass objects for
     	// the from and to family members.  Return
@@ -211,7 +295,7 @@ namespace FamilyTree {
                     string currentChildName = currentLineTokens[i];
                     
                     // Add the parent->child relationship to the graph
-                    if(addRelationship(parentName, currentChildName, FamilyMemberClass::Parent_Child) != SUCCESS) {
+                    if(addRelationship(parentName, currentChildName, Parent_Child) != SUCCESS) {
                         // Log error message
                         cout << "Failed to add the parent->child relationship " << parentName
                              << "->" << currentChildName << 
@@ -230,7 +314,7 @@ namespace FamilyTree {
                     }
 
                     // Add the child->parent relationship to the graph
-                    if(addRelationship(currentChildName, parentName, FamilyMemberClass::Child_Parent) != SUCCESS) {
+                    if(addRelationship(currentChildName, parentName, Child_Parent) != SUCCESS) {
 						// Log error message
 						cout << "Failed to add the parent->child relationship " << parentName
 							 << "->" << currentChildName <<
@@ -269,7 +353,7 @@ namespace FamilyTree {
 							 << " sibling relationships to the family tree" << endl;
 
 						// Add the sibling->sibling relationship to the graph
-						if(addRelationship(mainSiblingName, currentSiblingName, FamilyMemberClass::Sibling) != SUCCESS) {
+						if(addRelationship(mainSiblingName, currentSiblingName, Sibling) != SUCCESS) {
 							// Log error message
 							cout << "Failed to add the " << mainSiblingName
 								 << "->" << currentSiblingName

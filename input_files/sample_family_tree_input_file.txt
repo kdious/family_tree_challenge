@@ -1,10 +1,17 @@
+# FAMILY TREE LOG FILE
+
+# List of family members (Log file must start with this line)
 MEMBERS:Nancy:Carl:Jill:Adam:Joseph:Catherine:Kevin:Aaron:James:George:Samuel:Mary:Patrick:Robert
-CHILDREN:Nancy:Carl:Jill:Adam
-CHILDREN:Carl:Joseph:Catherine
-CHILDREN:Jill:Kevin
-CHILDREN:Kevin:Aaron:James:George:Samuel
-CHILDREN:James:Mary
-CHILDREN:George:Robert:Patrick
+
+# Lis tof parent->child relationships
+PARENT:Nancy:CHILDREN:Carl:Jill:Adam
+PARENT:Carl:CHILDREN:Joseph:Catherine
+PARENT:Jill:CHILDREN:Kevin
+PARENT:Kevin:CHILDREN:Aaron:James:George:Samuel
+PARENT:James:CHILDREN:Mary
+PARENT:George:CHILDREN:Robert:Patrick
+
+# List of sibling relationships
 SIBLINGS:Carl:Jill:Adam
 SIBLINGS:Joseph:Catherine
 SIBLINGS:Aaron:James:George:Samuel

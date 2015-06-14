@@ -244,8 +244,12 @@ namespace FamilyTree {
         // Read form input file line by line and construct the tree
         string currentLine;
         while(getline(infile, currentLine)) {
-            
-            // Split the current line into tokens based on the delimeter
+            // Skip comment lines or white space lines
+        	if(currentLine[0] == '#' || currentLine[0] == '/' || currentLine == "") {
+            	continue;
+            }
+
+        	// Split the current line into tokens based on the delimeter
             vector<string> currentLineTokens;
             boost::split(currentLineTokens, currentLine, boost::is_any_of(":"));
             
@@ -282,7 +286,7 @@ namespace FamilyTree {
                     cout << "Added family member " << currentVertex->GetLabel("Member_Name") << " to the family tree" << endl;
                 }
             }
-            else if (currentLineTokens[0].compare("CHILDREN") == 0) {
+            else if (currentLineTokens[0].compare("PARENT") == 0) {
             	cout << "Adding the parent->children relationships to the family tree" << endl;
             	// Find the parent vertex
                 string parentName = currentLineTokens[1];
@@ -290,7 +294,7 @@ namespace FamilyTree {
                 cout << "Adding the parent->child relationships for parent " << parentName << " to the family tree" << endl;
 
                 // For each child, add a parent->child edge to the graph
-                for(unsigned int i = 2; i < currentLineTokens.size(); i++) {
+                for(unsigned int i = 3; i < currentLineTokens.size(); i++) {
                     // Find the child vertex
                     string currentChildName = currentLineTokens[i];
                     

@@ -8,7 +8,6 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include unit_tests/subdir.mk
 -include src/subdir.mk
 -include subdir.mk
 -include objects.mk
@@ -39,19 +38,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: family_tree_challenge
+all: family_tree_challenge_DEBUG
 
 # Tool invocations
-family_tree_challenge: $(OBJS) $(USER_OBJS)
+family_tree_challenge_DEBUG: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L"/home/builduser/git/family_tree_challenge/libs" -o "family_tree_challenge" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -L"/home/builduser/git/family_tree_challenge/libs" -o "family_tree_challenge_DEBUG" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) family_tree_challenge
+	-$(RM) $(OBJS)$(C++_DEPS)$(C_DEPS)$(CC_DEPS)$(CPP_DEPS)$(EXECUTABLES)$(CXX_DEPS)$(C_UPPER_DEPS) family_tree_challenge_DEBUG
 	-@echo ' '
 
 .PHONY: all clean dependents

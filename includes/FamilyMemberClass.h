@@ -1,8 +1,27 @@
-/* 
- * File:   FamilyMember.h
- * Author: builduser
+/**
+ *  @file    FamilyMemberClass.h.cpp
+ *  @author  Kevin Dious
+ *  @date    6/15/2015
  *
- * Created on June 9, 2015, 9:51 PM
+ *  @brief Class definition for FamilyMemberClass object
+ *
+ *  @section DESCRIPTION
+ *
+ *  This file details the definition of the
+ *  FamilyMemberClass class.
+ *
+ *  FamilyMemberClass inherits from the Vertex class
+ *  in the OpenGraphTheory library.
+ *
+ *  The class is very basic for now but can easily
+ *  be expanded to accomodate the gender and age of
+ *  family members as well as other attributes that
+ *  can be defined.
+ *
+ *  Since this class inherits from the Vertex class
+ *  many attributes can be stored as Attributes
+ *  associated with the Vertex.
+ *
  */
 
 #ifndef FAMILYMEMBERCLASS_H
@@ -13,6 +32,8 @@
 
 #include "libs/opengt/opengt.h"
 
+#include "gtest/gtest_prod.h" // For testing
+
 namespace FamilyTree {
 
 using namespace OpenGraphtheory;
@@ -20,15 +41,14 @@ using namespace OpenGraphtheory;
 class FamilyMemberClass : public Vertex {
     // Constants and enums
     public:
-        // Default value for age
+        //! @brief Default value for age
         uint8_t INVALID_AGE = UINT8_MAX;
         
-        // Gender value
+        //! @brief Gender value
         typedef enum {
             Male,
             Female,
-            Other,
-            Invalid
+            Other
         } gender_t;
     
     // Member variables
@@ -36,15 +56,21 @@ class FamilyMemberClass : public Vertex {
 
     // Constructors/Destructors
     public:
-        // Default constructor
+        //! @brief Default constructor
         FamilyMemberClass();
 
-        // Destructor
+        //! @brief Destructor
         ~FamilyMemberClass();
 
     // Class methods
     public:
-        uint32_t getSiblingCount();
+        //! @brief Retrieves the number of siblings for this family member
+		//! @return Number of siblings
+        uint32_t getNumberOfSiblings();
+
+        //! @brief Retrieves the number of children for this family member
+		//! @return Number of children
+        uint32_t getNumberOfChildren();
         
 };
 

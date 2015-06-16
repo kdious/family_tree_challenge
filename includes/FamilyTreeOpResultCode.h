@@ -1,8 +1,16 @@
-/*
- * UbiResultCode.h
+/**
+ *  @file    FamilyTreeOpResultCode.h.cpp
+ *  @author  Kevin Dious
+ *  @date    6/15/2015
  *
- *  Created on: Dec 9, 2014
- *      Author: builduser
+ *  @brief Defines various result codes that are used to convey information
+ *
+ *  @section DESCRIPTION
+ *
+ *  Operation result codes that are used to identify
+ *  whether a method succeeds or the actual reason why
+ *  the method failed.
+ *
  */
 
 #ifndef FAMILYTREEOPRESULTCODE_H_
@@ -12,7 +20,7 @@
 
 namespace FamilyTree {
 
-    // Error codes that functions and methods will return
+    //! @brief Error codes that functions and methods will return
     typedef enum {
         UNDEFINED_ERROR = INT_MIN,
         INVALID_ARG,        

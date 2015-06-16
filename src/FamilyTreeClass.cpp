@@ -1,67 +1,56 @@
-/* 
- * File:   FamilyTree.cpp
- * Author: builduser
- * 
- * Created on June 10, 2015, 12:45 PM
+/**
+ *  @file    FamilyTreeClass.cpp
+ *  @author  Kevin Dious
+ *  @date    6/15/2015
+ *
+ *  @brief Implementation of the FamilyTreeClass
+ *
+ *  @section DESCRIPTION
+ *
+ *  Implements the FamilyTreeClass
+ *
  */
 
 #include <fstream>
-#include <boost/algorithm/string.hpp>
+#include "libs/boost/algorithm/string.hpp"	// local boost libs
+//#include <boost/algorithm/string.hpp>		// Use installed boost libs
+
+#include "libs/opengt/opengt.h"
 
 #include "FamilyTreeClass.h"
+#include "FamilyTreeDebug.h"
 
 namespace FamilyTree {
     
-    // Default constructor
     FamilyTreeClass::FamilyTreeClass() {
-
     }
 
-    // Copy constructor
     FamilyTreeClass::FamilyTreeClass(const FamilyTreeClass& orig) {
     }
     
-    // Constructor
-    FamilyTreeClass::FamilyTreeClass(string inputFileName) {
-        // TODO
+    FamilyTreeClass::FamilyTreeClass(string const & inputFileName) {
+    	m_inputFileName = inputFileName;
     }
 
-    // Destructor
     FamilyTreeClass::~FamilyTreeClass() {
     }
 
-    FamilyTreeOpResultCode FamilyTreeClass::initialize(string inputFileName) {
+
+    FamilyTreeOpResultCode FamilyTreeClass::initialize(string const & inputFileName) {
         return constructTreeFromFile(inputFileName);
-    }
-
-    FamilyTreeOpResultCode FamilyTreeClass::countSiblings(string memberName, uint32_t & count) {
-
-    	// Initialize count variable
-    	count = 0;
-
-    	// Search for the FamilyMemberClass object in the tree
-    	// with the name memberName
-    	FamilyMemberClass * pFamilyMember = findFamilyMember(memberName);
-
-    	// If the family member is not present, return error
-    	if(pFamilyMember == NULL) {
-    		return FAMILY_MEMBER_NOT_FOUND;
-    	}
-
-    	// Set the count variable
-    	count = pFamilyMember->getSiblingCount();
-
-    	// Return success
-        return SUCCESS;
     }
 
     FamilyMemberClass * FamilyTreeClass::findFamilyMember(string const & memberName) {
 
         FamilyMemberClass * pFamilyMember = NULL;
 
-        for(VertexIterator v = m_Graph.BeginVertices(); v != m_Graph.EndVertices(); v++) {
-            if((*v)->GetLabel("Member_Name").compare(memberName) == 0) {
-                pFamilyMember = (FamilyMemberClass *)(*v);
+        // Search the list of vertices to see
+        // if the label of a vertex matches memberName
+        // If so, return that vertex.
+        // Otherwise, return NULL
+        for(VertexIterator it = m_Graph.BeginVertices(); it != m_Graph.EndVertices(); it++) {
+            if((*it)->GetLabel("Member_Name").compare(memberName) == 0) {
+                pFamilyMember = (FamilyMemberClass *)(*it);
                 break;
             }
         }
@@ -69,23 +58,22 @@ namespace FamilyTree {
         return pFamilyMember;
     }
 
-    // Find the grandparent for family member
     FamilyTreeOpResultCode FamilyTreeClass::getGrandparentsList
 	(
-		string & memberName,
-		vector<FamilyMemberClass *> & grandParentList
+		string const & memberName,
+		vector<FamilyMemberClass *> & list
     ) {
     	// Retrieve the FamilyMemberClass objects for
 		// the specified family member.  Return error
 		// if one of them is not present in the tree.
     	FamilyMemberClass * pFamilyMember = findFamilyMember(memberName);
     	if(pFamilyMember == NULL) {
-			cout << memberName << " is not in the family tree" << endl;
+			FamilyTreeErrorMsg(LOG_ERROR, "%s is not in the family tree.", memberName.c_str())
 			return FAMILY_MEMBER_NOT_FOUND;
 		}
 
     	// Clear the vector
-    	grandParentList.clear();
+    	list.clear();
 
     	// Retrieve the set of from edges connected to this vertex
 		// where "from" edge means the edge is directed from the vertex
@@ -99,7 +87,7 @@ namespace FamilyTree {
 			Edge * const childParentEdge = childAdjacentEdges[i];
 			IntAttribute * pRelationshipAttr = (IntAttribute *)childParentEdge->GetAttribute("Relationship");
 
-			// If this has a child->parent relationship
+			// If this edge has a child->parent relationship
 			// then the "to" vertex is the parent of pFamilyMember
 			if(pRelationshipAttr->Value == Child_Parent) {
 				FamilyMemberClass * pParent = (FamilyMemberClass *)childParentEdge->To();
@@ -114,50 +102,299 @@ namespace FamilyTree {
 					Edge * const parentGrandparentEdge = childAdjacentEdges[j];
 					IntAttribute * pRelationshipAttr = (IntAttribute *)parentGrandparentEdge->GetAttribute("Relationship");
 
-					// If this is a child->parent edge,t
+					// If this is a child->parent edge,
 					// get the parent vertex.  This is the
 					// grandparent of memberName
 					if(pRelationshipAttr->Value == Child_Parent) {
-						grandParentList.push_back((FamilyMemberClass *)parentGrandparentEdge->To());
+						list.push_back((FamilyMemberClass *)parentGrandparentEdge->To());
 					}
 				}
 			}
 		}
 
+		// If we reach here, everything is fine.
+		// Return SUCCESS.
     	return SUCCESS;
 
     }
 
+    FamilyTreeOpResultCode FamilyTreeClass::getChildrenList
+	(
+		string const & memberName,
+		vector<FamilyMemberClass *> & list
+    ) {
+    	// Retrieve the FamilyMemberClass objects for
+		// the specified family member.  Return error
+		// if one of them is not present in the tree.
+    	FamilyMemberClass * pFamilyMember = findFamilyMember(memberName);
+    	if(pFamilyMember == NULL) {
+			FamilyTreeErrorMsg(LOG_ERROR, "%s is not in the family tree.", memberName.c_str())
+			return FAMILY_MEMBER_NOT_FOUND;
+		}
+
+    	// Clear the vector
+    	list.clear();
+
+    	// Retrieve the set of from edges connected to this vertex
+		// where "from" edge means the edge is directed from the vertex
+		EdgeSet memberAdjacentEdges = pFamilyMember->CollectIncidentEdges(false, true, false);
+
+		// Find the parent of each parent of pFamilyMember.  Store
+		// pointers to each of these FamilyMemberClass objects in
+		// grandParentList.  These are the pointers to each grandparent
+		// of pFamilyMember
+		for (unsigned int i = 0; i < memberAdjacentEdges.size(); i++) {
+			Edge * const currentMemberEdge = memberAdjacentEdges[i];
+			IntAttribute * pRelationshipAttr = (IntAttribute *)currentMemberEdge->GetAttribute("Relationship");
+
+			// If this is a parent->child edge,
+			// get the child vertex.  This is a
+			// child of memberName
+			if(pRelationshipAttr->Value == Parent_Child) {
+				list.push_back((FamilyMemberClass *)currentMemberEdge->To());
+			}
+		}
+
+    	return SUCCESS;
+    }
+
+    FamilyTreeOpResultCode FamilyTreeClass::getSiblingList
+	(
+		string const & memberName,
+		vector<FamilyMemberClass *> & list
+    ) {
+    	// Retrieve the FamilyMemberClass objects for
+		// the specified family member.  Return error
+		// if the family member is not present in the tree.
+    	FamilyMemberClass * pFamilyMember = findFamilyMember(memberName);
+    	if(pFamilyMember == NULL) {
+			FamilyTreeErrorMsg(LOG_ERROR, "%s is not in the family tree.", memberName.c_str())
+			return FAMILY_MEMBER_NOT_FOUND;
+		}
+
+    	// Clear the vector
+    	list.clear();
+
+    	// Retrieve the set of from edges connected to this vertex
+		// where "from" edge means the edge is directed from the vertex
+		EdgeSet memberAdjacentEdges = pFamilyMember->CollectIncidentEdges(false, true, false);
+
+		// Find the parent of each parent of pFamilyMember.  Store
+		// pointers to each of these FamilyMemberClass objects in
+		// grandParentList.  These are the pointers to each grandparent
+		// of pFamilyMember
+		for (unsigned int i = 0; i < memberAdjacentEdges.size(); i++) {
+			Edge * const currentMemberEdge = memberAdjacentEdges[i];
+			IntAttribute * pRelationshipAttr = (IntAttribute *)currentMemberEdge->GetAttribute("Relationship");
+
+			// If this is a parent->child edge,
+			// get the child vertex.  This is a
+			// child of memberName
+			if(pRelationshipAttr->Value == Sibling) {
+				list.push_back((FamilyMemberClass *)currentMemberEdge->To());
+			}
+		}
+
+    	return SUCCESS;
+    }
+
     FamilyTreeOpResultCode FamilyTreeClass::getGrandparentNameList
 	(
-		string memberName,
+		string const & memberName,
 		vector<string> & grandparentStringList
 	) {
+    	// Retrieve the list of grandparents for memberName
+    	// If there is an error, return the error
     	vector<FamilyMemberClass *> grandParentList;
     	FamilyTreeOpResultCode result = getGrandparentsList(memberName, grandParentList);
-
     	if(result != SUCCESS) {
-    		cout << "Failed to retrieve grandparent list" << endl;
+    		FamilyTreeErrorMsg(LOG_ERROR, "Failed to retrieve grandparent name list for %s.", memberName.c_str());
     		return result;
     	}
 
     	// Clear the input list
     	grandparentStringList.clear();
 
-    	// Create the list of grandparent strings
+    	// Create the list of grandparent name strings
     	for(vector<FamilyMemberClass *>::iterator it = grandParentList.begin() ; it != grandParentList.end(); ++it) {
-    		StringAttribute * nameAttribute = (StringAttribute *)((*it)->GetAttribute("Member_Name"));
-    		grandparentStringList.push_back(nameAttribute->Value);
+    		FamilyMemberClass * pGrandParent = (*it);
+    		grandparentStringList.push_back(pGrandParent->GetLabel("Member_Name"));
     	}
 
     	return SUCCESS;
     }
 
-    // Add a relationship to the Family Tree
+
+    FamilyTreeOpResultCode FamilyTreeClass::getChildrenNameList
+	(
+		string const & memberName,
+		vector<string> & nameList
+	) {
+    	vector<FamilyMemberClass *> childrenList;
+    	FamilyTreeOpResultCode result = getChildrenList(memberName, childrenList);
+    	if(result != SUCCESS) {
+    		FamilyTreeErrorMsg(LOG_ERROR, "Failed to retrieve children name list for %s.", memberName.c_str());
+    		return result;
+    	}
+
+    	// Clear the input list
+    	nameList.clear();
+
+    	// Create the list of children name strings
+    	for(vector<FamilyMemberClass *>::iterator it = childrenList.begin() ; it != childrenList.end(); ++it) {
+    		FamilyMemberClass * pChild = (*it);
+    		nameList.push_back(pChild->GetLabel("Member_Name"));
+    	}
+
+    	return SUCCESS;
+    }
+
+    FamilyTreeOpResultCode FamilyTreeClass::getSiblingNameList
+	(
+		string const & memberName,
+		vector<string> & nameList
+	) {
+    	vector<FamilyMemberClass *> siblingList;
+    	FamilyTreeOpResultCode result = getSiblingList(memberName, siblingList);
+    	if(result != SUCCESS) {
+    		FamilyTreeErrorMsg(LOG_ERROR, "Failed to retrieve sibling name list for %s.", memberName.c_str());
+    		return result;
+    	}
+
+    	// Clear the input list
+    	nameList.clear();
+
+    	// Create the list of sibling name strings
+    	for(vector<FamilyMemberClass *>::iterator it = siblingList.begin() ; it != siblingList.end(); ++it) {
+    		FamilyMemberClass * pSibling = (*it);
+    		nameList.push_back(pSibling->GetLabel("Member_Name"));
+    	}
+
+    	return SUCCESS;
+    }
+
+    FamilyTreeOpResultCode FamilyTreeClass::getFamilyMembersNameList(vector<string> & nameList) {
+
+    	// CLear the list
+    	nameList.clear();
+
+    	// Search the list of vertices and add
+    	// the label to the nameList.
+    	// For now, the label of each vertex
+    	// stores the name of that family member
+		for(VertexIterator it = m_Graph.BeginVertices(); it != m_Graph.EndVertices(); it++) {
+			nameList.push_back((*it)->GetLabel("Member_Name"));
+		}
+
+		return SUCCESS;
+	}
+
+    FamilyTreeOpResultCode FamilyTreeClass::getMembersWithChildCount
+	(
+		uint32_t count,
+		vector<string> & nameList
+	) {
+    	// Clear the nameList
+    	nameList.clear();
+
+    	// Find the names of the members that have children count == count
+		for(ConstVertexIterator it = m_Graph.BeginVertices(); it != m_Graph.EndVertices(); ++it) {
+			FamilyMemberClass * pCurrentMember = (FamilyMemberClass *)(*it);
+			if(pCurrentMember->getNumberOfChildren() == count) {
+				nameList.push_back(pCurrentMember->GetLabel("Member_Name"));
+			}
+		}
+
+		return SUCCESS;
+    }
+
+    FamilyTreeOpResultCode FamilyTreeClass::getMembersWithSiblingCount
+	(
+		uint32_t count,
+		vector<string> & nameList
+	) {
+		// Clear the nameList
+		nameList.clear();
+
+		// Find the names of the members that have children count == count
+		for(ConstVertexIterator it = m_Graph.BeginVertices(); it != m_Graph.EndVertices(); ++it) {
+			FamilyMemberClass * pCurrentMember = (FamilyMemberClass *)(*it);
+			if(pCurrentMember->getNumberOfSiblings() == count) {
+				nameList.push_back(pCurrentMember->GetLabel("Member_Name"));
+			}
+		}
+
+		return SUCCESS;
+	}
+
+    FamilyTreeOpResultCode FamilyTreeClass::getMembersWithMostGrandchildren(vector<string> & nameList) {
+		// Clear the nameList
+		nameList.clear();
+
+		FamilyTreeOpResultCode resultCode;
+		uint32_t largestGrandChildrenCount = 0;
+
+		// Iterate through each family member and get the list of grandchildren.
+		// 1. If the list of grandchildren for the current member > largestGrandChildrenCount,
+		//    then clear the list, add the current member to the nameList, and
+		//    update the largestGrandChildrenCount value.
+		//
+		// 2. If the list of grandchildren for current member == largestGrandChildrenCount,
+		//    then current member has the same number of grandchildren as the
+		//    largestGrandChildrenCount.  Add current member to the list.
+		//
+		// 3. Otherwise, do nothing.
+
+		for(ConstVertexIterator itParent = m_Graph.BeginVertices(); itParent != m_Graph.EndVertices(); ++itParent) {
+			// Current vertex is the parent
+			FamilyMemberClass * pParent = (FamilyMemberClass *)(*itParent);
+
+			// Get the list of children of the parent
+			// If this is not possible, print log message
+			// and return the error code
+			vector<FamilyMemberClass *> childrenList;
+			resultCode = getChildrenList(pParent->GetLabel("Member_Name"), childrenList);
+			if(resultCode != SUCCESS) {
+				FamilyTreeErrorMsg
+				(
+					LOG_ERROR, "Unable to retrieve children name list for %s.",
+					pParent->GetLabel("Member_Name").c_str()
+				);
+				return resultCode;
+			}
+			// Iterate through the children of pParent
+			for(vector<FamilyMemberClass *>::iterator itChild = childrenList.begin(); itChild != childrenList.end(); ++itChild) {
+				// Current vertex is a child of pParent.
+				FamilyMemberClass * pChild = (*itChild);
+
+				if(pChild->getNumberOfChildren() > largestGrandChildrenCount) {
+					// If the current child has more children than largestGrandChildrenCount
+					// then pParent has more grandchildren than the previous family members
+					// in mameList.  Clear the list, add pParent to the list and update
+					// largestGrandChildrenCount with the count of pChild children count.
+					nameList.clear();
+					nameList.push_back(pParent->GetLabel("Member_Name"));
+					largestGrandChildrenCount = pChild->getNumberOfChildren();
+				}
+				else if(pChild->getNumberOfChildren() == largestGrandChildrenCount) {
+					// If the current child has the same number of children as largestGrandChildrenCount
+					// then pParent has the same number of grandchildren than the current members
+					// in mameList. Just add pParent to the list.
+					nameList.push_back(pParent->GetLabel("Member_Name"));
+				}
+				else {
+					// Do nothing
+				}
+			}
+		}
+
+		return SUCCESS;
+	}
+
     FamilyTreeOpResultCode FamilyTreeClass::addRelationship
     (
-        string & from,
-        string & to,
+        string const & from,
+        string const & to,
         relationship_t relationship
     ) {
     	// Retrieve the FamilyMemberClass objects for
@@ -165,14 +402,13 @@ namespace FamilyTree {
     	// error if one of them is not present in the tree.
         FamilyMemberClass * fromMember = findFamilyMember(from);
         if(fromMember == NULL) {
-
-        	cout << from << " is not in the family tree" << endl;
+			FamilyTreeErrorMsg(LOG_ERROR, "%s is not in the family tree.", from.c_str());
         	return FAMILY_MEMBER_NOT_FOUND;
         }
 
         FamilyMemberClass * toMember = findFamilyMember(to);
         if(fromMember == NULL) {
-			cout << from << " is not in the family tree" << endl;
+			FamilyTreeErrorMsg(LOG_ERROR, "%s is not in the family tree.", to.c_str());
 			return FAMILY_MEMBER_NOT_FOUND;
 		}
 
@@ -180,11 +416,15 @@ namespace FamilyTree {
         // out vertex (start) and toMember is the in vertex (the endpoint)
         EdgeIterator newEdgeIterator = m_Graph.AddArc((Vertex *)fromMember, (Vertex *)toMember);
         
-        // Get pointer to edge and make sure it is valid
+        // Get pointer to edge and make sure it is
+        // a valid directed edge valid
         Edge * newEdge = *newEdgeIterator;
         if(newEdge == NULL) {
             // Print error Message
-            cout << "Failed to add directed edge to graph" << endl;
+            FamilyTreeErrorMsg(LOG_ERROR, "Failed to add directed edge %s->%s to the graph.",
+            	from.c_str(),
+				to.c_str()
+			);
 
             // Remove the edge from the graph
             m_Graph.RemoveEdge(newEdgeIterator);
@@ -195,8 +435,10 @@ namespace FamilyTree {
         
         if(newEdge->IsDirected() == false) {
             // Print error Message
-            cout << "Edge not created properly" << endl;
-
+            FamilyTreeErrorMsg(LOG_ERROR, "Directed edge %s->%s was not created as a proper directed edge.",
+				from.c_str(),
+				to.c_str()
+			);
             // Remove the edge from the graph
             m_Graph.RemoveEdge(newEdgeIterator);
             
@@ -205,10 +447,15 @@ namespace FamilyTree {
         }
         
         // Add relationship attribute to the edge
+        // If this fails, remove the ege and
+        // return error
         IntAttribute * relationshipAttribute = (IntAttribute *)newEdge->AddAttribute("Relationship", "int");
         if(relationshipAttribute == NULL) {
             // Print error Message
-            cout << "Edge attribute not added properly" << endl;
+            FamilyTreeErrorMsg(LOG_ERROR, "Relationship attribute %s for directed edge %s->%s was not added properly.",
+            	from.c_str(),
+				to.c_str()
+			);
 
             // Remove the edge from the graph
             m_Graph.RemoveEdge(newEdgeIterator);
@@ -225,14 +472,14 @@ namespace FamilyTree {
         return SUCCESS;
     }
     
-    FamilyTreeOpResultCode FamilyTreeClass::constructTreeFromFile(string fileName) {
+    FamilyTreeOpResultCode FamilyTreeClass::constructTreeFromFile(string const & inputFileName) {
     
         // Try and open the input file
-        ifstream infile(fileName.c_str());
+        ifstream infile(inputFileName.c_str());
   
         if(infile.is_open() == false) {
             // Print error Message
-            cout << "Could not open the file: " << fileName << endl;
+            FamilyTreeErrorMsg(LOG_ERROR, "Could not open the file: %s", inputFileName.c_str());
 
             // Close input file
             infile.close();
@@ -241,7 +488,7 @@ namespace FamilyTree {
             return INPUT_FILE_OPEN_ERROR;
         }
         
-        // Read form input file line by line and construct the tree
+        // Read from input file line by line and construct the tree
         string currentLine;
         while(getline(infile, currentLine)) {
             // Skip comment lines or white space lines
@@ -255,7 +502,7 @@ namespace FamilyTree {
             
             // Create the member objects and add them as vertices to the graph
             if(currentLineTokens[0].compare("MEMBERS") == 0) {
-            	cout << "Adding " << currentLineTokens.size() - 1 << " family members to the family tree" << endl;
+            	FamilyTreeLogMsg(LOG_DEBUG, "Adding %d family members to the family tree", currentLineTokens.size() - 1);
                 for(unsigned int i = 1; i < currentLineTokens.size(); i++) {
                     // Add the vertex to the graph
                     VertexIterator currentVertexIterator = m_Graph.AddVertex();
@@ -264,7 +511,7 @@ namespace FamilyTree {
                     Vertex * currentVertex = *currentVertexIterator;
                     if(currentVertex == NULL) {
                         // Print error Message
-                        cout << "Failed to add directed vertex to graph" << endl;
+                        FamilyTreeErrorMsg(LOG_ERROR, "Failed to add directed vertex to graph");
 
                         // Remove the edge from the graph
                         m_Graph.RemoveVertex(currentVertex, true);
@@ -283,15 +530,21 @@ namespace FamilyTree {
                     // Set the name of the family member
                     memberName->Value = currentLineTokens[i];
 
-                    cout << "Added family member " << currentVertex->GetLabel("Member_Name") << " to the family tree" << endl;
+                    FamilyTreeLogMsg(LOG_DEBUG, "Added family member %s to the family tree",
+                    	currentVertex->GetLabel("Member_Name").c_str());
                 }
             }
             else if (currentLineTokens[0].compare("PARENT") == 0) {
-            	cout << "Adding the parent->children relationships to the family tree" << endl;
+            	FamilyTreeLogMsg(LOG_DEBUG, "Adding the parent-child relationships to the family tree");
             	// Find the parent vertex
                 string parentName = currentLineTokens[1];
 
-                cout << "Adding the parent->child relationships for parent " << parentName << " to the family tree" << endl;
+                FamilyTreeLogMsg
+				(
+					LOG_DEBUG,
+					"Adding the parent->child and child->parent relationships for parent %s to the family tree.",
+					parentName.c_str()
+                );
 
                 // For each child, add a parent->child edge to the graph
                 for(unsigned int i = 3; i < currentLineTokens.size(); i++) {
@@ -301,9 +554,12 @@ namespace FamilyTree {
                     // Add the parent->child relationship to the graph
                     if(addRelationship(parentName, currentChildName, Parent_Child) != SUCCESS) {
                         // Log error message
-                        cout << "Failed to add the parent->child relationship " << parentName
-                             << "->" << currentChildName << 
-                                " relationship to the tree" << endl;
+                        FamilyTreeErrorMsg(
+                        	LOG_ERROR,
+							"Failed to add the parent->child relationship %s->%s to the family tree",
+							parentName.c_str(),
+							currentChildName.c_str()
+                        );
                         
                         // Close input file
                         infile.close();
@@ -312,18 +568,23 @@ namespace FamilyTree {
                         return TREE_CONSTRUCTION_ERROR;
                     }
                     else {
-						cout << "Successfully Added the parent->child relationship " << parentName
-							 << "->" << currentChildName <<
-								" relationship to the family tree" << endl;
+						FamilyTreeLogMsg(
+							LOG_DEBUG,
+							"Successfully added the parent->child relationship %s->%s to the family tree",
+							parentName.c_str(),
+							currentChildName.c_str()
+						);
                     }
 
                     // Add the child->parent relationship to the graph
                     if(addRelationship(currentChildName, parentName, Child_Parent) != SUCCESS) {
 						// Log error message
-						cout << "Failed to add the parent->child relationship " << parentName
-							 << "->" << currentChildName <<
-								" relationship to the tree" << endl;
-
+						FamilyTreeErrorMsg(
+							LOG_ERROR,
+							"Failed to add the child->parent relationship %s->%s to the family tree",
+							currentChildName.c_str(),
+							parentName.c_str()
+						);
 						// Close input file
 						infile.close();
 
@@ -331,55 +592,70 @@ namespace FamilyTree {
 						return TREE_CONSTRUCTION_ERROR;
 					}
 					else {
-						cout << "Successfully Added the child->parent relationship "
-							 << currentChildName << "->" << parentName
-							 << " relationship to the family tree" << endl;
+						FamilyTreeLogMsg(
+							LOG_DEBUG,
+							"Successfully added the child->parent relationship %s->%s to the family tree",
+							currentChildName.c_str(),
+							parentName.c_str()
+						);
 					}
                 }
             }
             else if (currentLineTokens[0].compare("SIBLINGS") == 0) {
-            	cout << "Adding the sibling relationships to the family tree" << endl;
-
+            	FamilyTreeLogMsg(LOG_DEBUG, "Adding the sibling relationships to the family tree");
+            	// Loop through the sibling entries and add
+            	// link them together.  Siblings should have
+            	// directed edges to and from one another
                 for(unsigned int i = 1; i < currentLineTokens.size(); i++) {
                 	// Find the mainSibling vertex
                 	string mainSiblingName = currentLineTokens[i];
 
                 	for(unsigned int j = 1; j < currentLineTokens.size(); j++) {
+                		// Do not add a relationship for sibling to itself
                 		if(i == j) {
                 			continue;
                 		}
 
                 		// Find the other sibling vertex
 						string currentSiblingName = currentLineTokens[j];
-
-						cout << "Adding the " << mainSiblingName
-						     << "->" << currentSiblingName
-							 << " sibling relationships to the family tree" << endl;
+						FamilyTreeLogMsg
+						(
+							LOG_DEBUG,
+							"Adding the %s->%s sibling relationships to the family tree.",
+							mainSiblingName.c_str(),
+							currentSiblingName.c_str()
+						);
 
 						// Add the sibling->sibling relationship to the graph
 						if(addRelationship(mainSiblingName, currentSiblingName, Sibling) != SUCCESS) {
 							// Log error message
-							cout << "Failed to add the " << mainSiblingName
-								 << "->" << currentSiblingName
-								 << " sibling relationship to the family tree" << endl;
-
+							FamilyTreeErrorMsg(
+								LOG_ERROR,
+								"Failed to add the %s->%s sibling relationship to the family tree",
+								mainSiblingName.c_str(),
+								currentSiblingName.c_str()
+							);
 							// Close input file
 							infile.close();
 
 							// return error
 							return TREE_CONSTRUCTION_ERROR;
 						}
-
-						// Log error message
-						cout << "Successfully added the mainSibling->sibling relationship " << mainSiblingName
-							 << "->" << currentSiblingName <<
-								" to the family tree" << endl;
+						else {
+							// Log error message
+							FamilyTreeLogMsg(
+								LOG_DEBUG,
+								"Successfully added the %s->%s sibling to the family tree",
+								mainSiblingName.c_str(),
+								currentSiblingName.c_str()
+							);
+						}
                 	}
                 }
             }
             else {
                 // Print error Message
-                cout << "Input file formatted incorrectly" << endl;
+                FamilyTreeErrorMsg(LOG_ERROR, "Input file formatted incorrectly");
                 
                 // Close input file
                 infile.close();
@@ -388,6 +664,9 @@ namespace FamilyTree {
                 return INPUT_FILE_FORMAT_ERROR;
             }
         }
+
+        // Close input file
+		infile.close();
 
         return SUCCESS;
     }

@@ -60,3 +60,7 @@ example: LD_LIBRARY_PATH=../libs ./family_tree_challenge ../input_files/sample_f
 See FamilyTreeTests.cpp for examples on how to write and test.
 
 Also, to test private member functions, see https://code.google.com/p/googletest/wiki/AdvancedGuide#Testing_Private_Code
+
+Info on configuring Eclipse so that your GoogleTest unit test main file can also reside in the same project without the multiple definitions of main compilation issue:
+
+http://pezad-games.googlecode.com/svn/trunk/GTestTest/HOWTO

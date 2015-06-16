@@ -27,6 +27,12 @@ Pthread
 
 - Usually included with the OS
 
+## APIs
+
+The OpenGraphTheory API is documented here:
+http://www.open-graphtheory.org/documentation/html/annotated.html
+
+
 ## Installation
 
 Provide code examples and explanations of how to get the project.

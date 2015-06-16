@@ -50,6 +50,49 @@ lpthread
 
 libgtest.a and libopengt.so are included in the "libs" folder
 
+## Input File
+
+A sample input file is provided in the input_files folder.  See:
+https://github.com/kdious/family_tree_challenge/blob/master/input_files/sample_family_tree_input_file.txt
+
+The input file MUST adhere to the following formatting rules in order for it to be read and processed properly by the program:
+
+1. All fields are delimed with a ":".
+
+2. The first non-comment and non-white space line MUST start with the list of family members.
+
+The line MUST start with "MEMBERS" and is then followed a list of family members (in no particular order).
+Each name in the members list MUST be unique.
+
+Example:
+MEMBERS:Nancy:Carl:Jill:Adam:Joseph:Catherine:Kevin:Aaron:James:George:Samuel:Mary:Patrick:Robert
+
+3. Other subsequent lines can define either PARENT or SIBLING relationships
+
+3a. PARENT relationships
+
+The format of a parent relationship is as follows: PARENT:<parent name>:CHILDREN:<child1>:<child2>:<child3>...
+This means that <parent name> is the parent of each of the family members listed after CHILDREN
+ 
+3b. SIBLING relationships
+ 
+The format of a sibling relationship line is as follows: SIBLINGS:<sibling1>:<sibling2>:<sibling33>...
+This means that all of the siblings listed after SIBLINGS are in fact siblings.
+For each group of siblings, there should also be a PARENT relationship line in the file indicating that all of the siblings have the same parent. 
+
+Example:
+
+PARENT:Nancy:CHILDREN:Carl:Jill:Adam
+SIBLINGS:Carl:Jill:Adam
+
+4. Comments
+
+The following characters are acceptable for indicating comments:
+#
+/
+
+These characters MUST start the line for the lien to be a valid comment line.  Comment lines will be skipped when the file is being read by the program.
+
 ## Runing Program
 
 In the eclipse project, jsut select either the "Debug" or "GTest" configuration depending on which
